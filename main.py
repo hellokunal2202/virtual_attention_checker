@@ -1,77 +1,109 @@
 import streamlit as st
+import hashlib
 from utils import helper
-# Page configuration
 
-st.set_page_config(page_title="Login Page", page_icon="🔐", layout="centered")
-emp_data = helper.read_emp_data()
-
-# Custom CSS for styling
-st.markdown(
-    """
-    <style>
-        .main {
-            background-color: #f4f4f4;
-            text-align: center;
-        }
-        .login-container {
-            max-width: 350px;
-            padding: 2rem;
-            border-radius: 10px;
-            background-color: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin: auto;
-        }
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-        input {
-            border-radius: 5px !important;
-        }
-        .login-btn {
-            background-color: #0078D4;
-            color: white;
-            font-weight: bold;
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .login-btn:hover {
-            background-color: #005a9e;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
+# Page Configuration
+st.set_page_config(
+    page_title="Virtual Attention Checker - Login",
+    page_icon="🔒",
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# Login UI
-st.markdown('<div class="title">Login</div>', unsafe_allow_html=True)
+# Load employee data
+emp_data = helper.read_emp_data()
 
-email = st.text_input("Email", placeholder="someone@yash.com")
-password = st.text_input("Password", type="password")
+# Session state initialization
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.user_role = None
 
-if st.button("Login", help="Click to login"):
-    if email and password:
-        for emp in emp_data:
-            if emp["emp_email"]==email and emp["emp_password"]==password:
-                st.write(emp["emp_email"]==email)
-                if emp["role"]=="admin":
-                    #will redirect to admin
-                    st.success("login as admin")
+# Custom CSS for modern UI
+st.markdown("""
+<style>
+    /* Main container */
+    .login-container {
+        max-width: 300px;
+        padding: 2rem;
+        margin: auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        background-color: #fff;
+        text-align: center;
+    }
+
+    /* Title */
+    .title {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    /* Input fields */
+    .stTextInput>div>div {
+        width: 100%;
+        margin: auto;
+    }
+
+    /* Login button */
+    .stButton>button {
+        width: 100%;
+        border-radius: 6px;
+        padding: 0.6rem;
+        font-weight: 600;
+        background-color: #0078D4;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .stButton>button:hover {
+        background-color: #005a9e;
+        transform: translateY(-1px);
+    }
+
+    /* Error messages */
+    .stAlert {
+        text-align: center;
+        max-width: 250px;
+        margin: auto;
+    }
+
+</style>
+""", unsafe_allow_html=True)
+
+# If user is logged in, display success message
+if st.session_state.authenticated:
+    st.success(f"Logged in as {st.session_state.user_role}")
+    if st.button("Logout"):
+        st.session_state.authenticated = False
+        st.session_state.user_role = None
+        st.rerun()
+else:
+    # Login Form
+    with st.form("login_form"):
+        # st.markdown('<div class="login-container">', unsafe_allow_html=True)
+        st.markdown('<h1 class="title">Virtual Attention Checker</h1>', unsafe_allow_html=True)
+
+        email = st.text_input("Email", placeholder="someone@yash.com")
+        password = st.text_input("Password", type="password")
+        login_submit = st.form_submit_button("Login")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Authentication
+    if login_submit:
+        if email and password:
+            for emp in emp_data:
+                if emp["emp_email"] == email and emp["emp_password"] == password:
+                    st.session_state.authenticated = True
+                    st.session_state.user_role = "Admin" if emp["role"] == "admin" else "User"
+                    st.success(f"Logged in as {st.session_state.user_role}")
+                    st.rerun()
                     break
-                else:
-                    #will redirect to user
-                    st.success("login as user")
-                    break
-                
+            else:
+                st.error("Invalid email or password.")
         else:
-            st.error("Please enter valid email and password.")
-
-    else:
-        st.error("Please enter email and password.")
-
-st.markdown('</div>', unsafe_allow_html=True)
+            st.error("Please enter email and password.")
