@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 from pages.utils.demo_data import DEMO_EMPLOYEES,initialize_demo_data
+from pages.utils.ui_components import persistent_logout
 
 def main():
     st.set_page_config(page_title="Meeting Analytics", layout="wide")
     initialize_demo_data()
+    persistent_logout()
     
     st.title("Meeting Analytics")
     if 'meetings_db' not in st.session_state or not st.session_state.meetings_db:

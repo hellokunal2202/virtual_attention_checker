@@ -1,7 +1,8 @@
 import streamlit as st
-import streamlit as st
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from pages.utils.demo_data import initialize_demo_data
+from pages.utils.ui_components import persistent_logout
+import pandas as pd
 
 # Initialize session state data
 initialize_demo_data()
@@ -40,11 +41,23 @@ st.markdown("""
     .logout-btn {
         background-color: #ff4b4b !important;
         color: white !important;
+        margin-top: 2rem !important;
+    }
+    .report-btn {
+        margin-top: 1rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Admin profile data (customize with your admin details)
+# Initialize logs if not exists
+if 'system_logs' not in st.session_state:
+    st.session_state.system_logs = [
+        {"timestamp": datetime.now() - timedelta(hours=2), "action": "System initialized", "details": "Admin dashboard loaded"},
+        {"timestamp": datetime.now() - timedelta(hours=1), "action": "Meeting scheduled", "details": "Quarterly Review scheduled for 2023-11-15"},
+        {"timestamp": datetime.now() - timedelta(minutes=45), "action": "Report generated", "details": "Monthly analytics report"},
+    ]
+
+# Admin profile data
 ADMIN_PROFILE = {
     "name": "Admin User",
     "role": "System Administrator",
@@ -53,14 +66,9 @@ ADMIN_PROFILE = {
     "photo_url": "myimg.png"  # Replace with actual photo
 }
 
-# Header with logout button
-col1, col2 = st.columns([4, 1])
-with col1:
-    st.title("Admin Dashboard")
-with col2:
-    if st.button("🚪 Logout", key="logout_btn", use_container_width=True):
-        st.session_state.clear()
-        st.rerun()
+persistent_logout()
+# Header without logout button
+st.title("Admin Dashboard")
 
 # Admin Profile Section
 with st.container():
@@ -105,7 +113,7 @@ with cols[3]:
 # Recent Activity Section
 st.subheader("🔄 Recent Activity")
 with st.container(border=True):
-    tab1, tab2 = st.tabs(["📅 Recent Meetings", "👥 User Activity"])
+    tab1, tab2 = st.tabs(["📅 Recent Meetings", "📝 System Logs"])
     
     with tab1:
         recent_meetings = sorted(
@@ -118,22 +126,46 @@ with st.container(border=True):
             with st.expander(f"{meeting['title']} - {meeting['date'].strftime('%b %d, %Y')}"):
                 st.write(f"**When:** {meeting['date'].strftime('%A, %B %d at %I:%M %p')}")
                 st.write(f"**Attendees:** {len(meeting['attendees'])}")
-                st.write(f"**Description:** {meeting['description']}")
+                
+                # Generate report button - only visible when expanded
+                if st.button("📊 View Report", key=f"report_{meeting['title']}"):
+                    # Create a sample report
+                    report_data = {
+                        "Meeting Title": [meeting['title']],
+                        "Date": [meeting['date'].strftime('%Y-%m-%d %H:%M')],
+                        "Attendees": [len(meeting['attendees'])],
+                        "Duration": ["1 hour"],
+                        "Status": ["Completed" if meeting['date'] < datetime.now() else "Upcoming"]
+                    }
+                    df = pd.DataFrame(report_data)
+                    
+                    # Add to logs
+                    st.session_state.system_logs.insert(0, {
+                        "timestamp": datetime.now(),
+                        "action": "Report generated",
+                        "details": f"Meeting: {meeting['title']}"
+                    })
+                    
+                    # Download button
+                    st.download_button(
+                        label="⬇️ Download Report",
+                        data=df.to_csv(index=False),
+                        file_name=f"{meeting['title']}_report.csv",
+                        mime="text/csv",
+                        key=f"download_{meeting['title']}"
+                    )
     
     with tab2:
-        # Mock user activity data
-        activity_data = [
-            {"user": "John Doe", "action": "Created meeting", "time": "2 hours ago"},
-            {"user": "Jane Smith", "action": "Joined meeting", "time": "4 hours ago"},
-            {"user": "Alex Wong", "action": "Updated profile", "time": "1 day ago"},
-            {"user": "Sarah Connor", "action": "Downloaded report", "time": "1 day ago"},
-            {"user": "Mike Jones", "action": "Scheduled meeting", "time": "2 days ago"},
-        ]
-        
-        for activity in activity_data:
-            st.markdown(f"""
-            - **{activity['user']}** {activity['action']} ({activity['time']})
-            """)
+        # System logs display
+        st.write("**Recent System Activities**")
+        for log in sorted(st.session_state.system_logs, key=lambda x: x['timestamp'], reverse=True)[:10]:
+            with st.container(border=True):
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    st.caption(log['timestamp'].strftime('%Y-%m-%d %H:%M'))
+                with col2:
+                    st.markdown(f"**{log['action']}**")
+                    st.caption(log['details'])
 
 # System Management Section
 st.subheader("⚙️ System Management")
@@ -144,8 +176,22 @@ with st.container(border=True):
         if st.button("🔄 Refresh Data", use_container_width=True):
             st.rerun()
     with cols[1]:
-        if st.button("📊 Generate Reports", use_container_width=True):
-            st.toast("Report generation started!", icon="📊")
+        if st.button("📊 Generate All Reports", use_container_width=True):
+            # Add to logs
+            st.session_state.system_logs.insert(0, {
+                "timestamp": datetime.now(),
+                "action": "Bulk report generation",
+                "details": "Generated reports for all meetings"
+            })
+            st.toast("All reports generated!", icon="📊")
     with cols[2]:
         if st.button("🛠️ System Settings", use_container_width=True):
             st.toast("Redirecting to settings...", icon="⚙️")
+
+def add_log_entry(action, details):
+    """Helper function to add log entries"""
+    st.session_state.system_logs.insert(0, {
+        "timestamp": datetime.now(),
+        "action": action,
+        "details": details
+    })

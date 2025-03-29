@@ -1,11 +1,16 @@
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, time
 from pages.utils.demo_data import DEMO_EMPLOYEES
 
+# Helper functions
+def get_employee(emp_id):
+    """Get employee by ID"""
+    return next(e for e in st.session_state.demo_employees if e['id'] == emp_id)
+ 
 def get_employee_name(emp_id):
     """Get formatted employee name by ID"""
-    employee = next((emp for emp in DEMO_EMPLOYEES if emp['id'] == emp_id), None)
-    return f"{employee['name']} ({employee['department']})" if employee else f"Unknown (ID: {emp_id})"
+    emp = get_employee(emp_id)
+    return f"{emp['name']} ({emp['department']})"
 
 def display_meeting_details(meeting, meeting_type):
     """Display meeting details with appropriate actions"""
@@ -14,7 +19,8 @@ def display_meeting_details(meeting, meeting_type):
         
         with col1:
             # Date and attendees info
-            st.markdown(f"**Date & Time**  \n{meeting['date'].strftime('%A, %b %d, %Y  %I:%M %p')}")
+            meeting_datetime = meeting.get('datetime') or datetime.combine(meeting['date'], meeting.get('time', time(0, 0)))
+            st.markdown(f"**Date & Time**  \n{meeting_datetime.strftime('%A, %b %d, %Y  %I:%M %p')}")
             st.markdown(f"**Attendees**  \n{len(meeting['attendees'])} people")
             
             # Action buttons
@@ -48,7 +54,8 @@ def display_meeting_details(meeting, meeting_type):
             
             # Live meeting status
             if meeting_type == "live":
-                duration = datetime.now() - meeting['date']
+                meeting_datetime = meeting.get('datetime') or datetime.combine(meeting['date'], meeting.get('time', time(0, 0)))
+                duration = datetime.now() - meeting_datetime
                 hours, remainder = divmod(duration.seconds, 3600)
                 minutes, _ = divmod(remainder, 60)
                 st.markdown(f"**Status**  \n🟢 Live ({hours}h {minutes}m)")
@@ -108,8 +115,16 @@ def view_meetings():
         return
     
     for meeting in st.session_state.meetings_db:
-        start_window = meeting['date'] - timedelta(minutes=30)
-        end_window = meeting['date'] + timedelta(hours=1)
+        # Get meeting datetime - handle both old and new formats
+        if 'datetime' in meeting:
+            meeting_datetime = meeting['datetime']
+        else:
+            meeting_date = meeting['date']
+            meeting_time = meeting.get('time', time(0, 0))
+            meeting_datetime = datetime.combine(meeting_date, meeting_time)
+        
+        start_window = meeting_datetime - timedelta(minutes=30)
+        end_window = meeting_datetime + timedelta(hours=1)
         
         if now > end_window:
             past.append(meeting)
@@ -118,9 +133,14 @@ def view_meetings():
         else:
             upcoming.append(meeting)
     
-    # Sort meetings
-    past.sort(key=lambda x: x['date'], reverse=True)
-    upcoming.sort(key=lambda x: x['date'])
+    # Sort meetings using datetime objects
+    def get_meeting_datetime(m):
+        if 'datetime' in m:
+            return m['datetime']
+        return datetime.combine(m['date'], m.get('time', time(0, 0)))
+    
+    past.sort(key=get_meeting_datetime, reverse=True)
+    upcoming.sort(key=get_meeting_datetime)
     
     # Create tabs
     tab1, tab2, tab3 = st.tabs(["Past Meetings", "Upcoming Meetings", "Live Meetings"])
@@ -131,10 +151,10 @@ def view_meetings():
         else:
             selected = st.selectbox(
                 "Select meeting:",
-                options=[f"{m['title']} - {m['date'].strftime('%b %d')}" for m in past],
+                options=[f"{m['title']} - {get_meeting_datetime(m).strftime('%b %d %H:%M')}" for m in past],
                 key="past_select"
             )
-            meeting = next(m for m in past if f"{m['title']} - {m['date'].strftime('%b %d')}" == selected)
+            meeting = next(m for m in past if f"{m['title']} - {get_meeting_datetime(m).strftime('%b %d %H:%M')}" == selected)
             display_meeting_details(meeting, "past")
     
     with tab2:
@@ -143,10 +163,10 @@ def view_meetings():
         else:
             selected = st.selectbox(
                 "Select meeting:",
-                options=[f"{m['title']} - {m['date'].strftime('%b %d')}" for m in upcoming],
+                options=[f"{m['title']} - {get_meeting_datetime(m).strftime('%b %d %H:%M')}" for m in upcoming],
                 key="upcoming_select"
             )
-            meeting = next(m for m in upcoming if f"{m['title']} - {m['date'].strftime('%b %d')}" == selected)
+            meeting = next(m for m in upcoming if f"{m['title']} - {get_meeting_datetime(m).strftime('%b %d %H:%M')}" == selected)
             display_meeting_details(meeting, "upcoming")
     
     with tab3:
@@ -155,3 +175,12 @@ def view_meetings():
         else:
             for meeting in live:
                 display_meeting_details(meeting, "live")
+
+def main():
+    """Main function"""
+    if 'demo_employees' not in st.session_state:
+        st.session_state.demo_employees = DEMO_EMPLOYEES
+    view_meetings()
+
+if __name__ == "__main__":
+    main()

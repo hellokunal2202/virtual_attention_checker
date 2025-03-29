@@ -3,11 +3,12 @@ from pages.utils.demo_data import initialize_demo_data
 from pages.utils.View_Meetings import view_meetings
 from pages.utils.Create_Meeting import create_meeting
 from pages.utils.Edit_Meetings import edit_meetings
-
+from pages.utils.ui_components import persistent_logout
 
 def main():
     st.set_page_config(page_title="Meeting Management", layout="wide")
     initialize_demo_data()
+    persistent_logout()
     
     st.title("Meeting Management")
     tab1, tab2, tab3 = st.tabs(["Create Meeting", "View Meetings", "Edit Meetings"])
