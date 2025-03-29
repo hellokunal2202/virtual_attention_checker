@@ -1,6 +1,21 @@
 import streamlit as st
 import hashlib
 
+# following code helps to remove the default press enter to submit text
+
+# # Add this CSS to hide the helper text
+# st.markdown("""
+# <style>
+#     .stTextInput [data-testid="InputInstructions"] {
+#         display: none;
+#     }
+# </style>
+# """, unsafe_allow_html=True)
+
+# # Your text inputs will now show no helper text
+# username = st.text_input("Username", label_visibility="visible")
+# password = st.text_input("Password", type="password", label_visibility="visible")
+
 # Page Configuration
 st.set_page_config(
     page_title="Virtual Attention Checker - Login",
@@ -13,16 +28,27 @@ st.set_page_config(
 # Custom CSS with improvements
 st.markdown("""
 <style>
-    /* Main container */
+    /* Modified Main Container */
     .main {
         max-width: 280px;
+        min-height: 10px;  /* Increased form height */
         padding: 1.5rem;
-        margin: 10px;
+        margin: 20px auto;  /* Centered with vertical spacing */
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         background-color: var(--background-color);
+        /* Add these to control internal spacing */
+        display: flex;
+        flex-direction: column;
     }
-    
+
+    /* Ensure form content uses available space */
+    .main form {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
     /* Title styling */
     .title {
         text-align: center;
@@ -167,8 +193,30 @@ st.markdown("""
         --button-text-color: #f0f2f6;
         --main-background: linear-gradient(135deg, #0f0c29 0%, #302b63 100%);
     }
+    .stTextInput [data-testid="InputInstructions"] {
+        display: none;
+    }
+      /* Adjust label and help icon positioning */
+    .stTextInput label {
+        margin-bottom: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-right: 12px !important;
+        
+    }
+
+    /* Add margin between label+help and input field */
+    .stTextInput>div>div {
+        margin-top: 12px !important;
+    }
+    
+
+    
 </style>
+
 """, unsafe_allow_html=True)
+
 
 # Rest of the code remains the same as in the previous version
 # (User database, authentication function, and login page content)
@@ -207,25 +255,28 @@ with st.container():
         # Username Field
         
         username = st.text_input(
-            "Username",
+            "Username\u00A0\u00A0\u00A0",  # Using non-breaking spaces
             #placeholder="Enter your username",
             help="Your registered username",
-            key="username_input"
+            key="username_input",
+            label_visibility="visible"
         )
         
         # Password Field
         password = st.text_input(
-            "Password",
+            "Password\u00A0\u00A0\u00A0",
             type="password",
             #placeholder="Enter your password",
             help="Your account password",
-            key="password_input"
+            key="password_input",
+            label_visibility="visible"
         )
         
-        # Remember Me checkbox (centered)
-        cols = st.columns([3, 4, 3])  # Create columns for centering
-        with cols[1]:
-            remember_me = st.checkbox("Remember me", value=False)
+        
+        # # Remember Me checkbox (centered)
+        # cols = st.columns([3, 4, 3])  # Create columns for centering
+        # with cols[1]:
+        #     remember_me = st.checkbox("Remember me", value=False)
         
         # Login Button (centered with hover tooltip)
         cols = st.columns([7, 4, 5])  # Create columns for centering
