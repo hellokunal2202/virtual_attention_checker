@@ -246,7 +246,7 @@ with st.container():
                     st.session_state["username"] = username
                     st.session_state["remember_me"] = remember_me
                     st.success("Login successful! Redirecting...")
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("Username and password do not match")
     
@@ -261,4 +261,4 @@ with st.container():
 
 # Redirect if already logged in
 if st.session_state.get("authenticated"):
-    st.switch_page("/admin/Home.py")
+    st.switch_page("admin\Home.py")
