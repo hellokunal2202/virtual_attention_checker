@@ -1,0 +1,82 @@
+[
+    {
+      "id": 1,
+      "emp_id": 1001,
+      "emp_name": "Admin",
+      "emp_email": "admin@example.com",
+      "emp_password": "password123",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "emp_id": 1002,
+      "emp_name": "Jane Smith",
+      "emp_email": "jane.smith@example.com",
+      "emp_password": "securepass",
+      "role": "user"
+    },
+    {
+      "id": 3,
+      "emp_id": 1003,
+      "emp_name": "Peter Jones",
+      "emp_email": "peter.jones@example.com",
+      "emp_password": "mysecret",
+      "role": "user"
+    },
+    {
+      "id": 4,
+      "emp_id": 1004,
+      "emp_name": "Alice Brown",
+      "emp_email": "alice.brown@example.com",
+      "emp_password": "strongpassword",
+      "role": "admin"
+    },
+    {
+      "id": 5,
+      "emp_id": 1005,
+      "emp_name": "Bob Green",
+      "emp_email": "bob.green@example.com",
+      "emp_password": "anotherpass",
+      "role": "user"
+    },
+    {
+      "id": 6,
+      "emp_id": 1006,
+      "emp_name": "Charlie White",
+      "emp_email": "charlie.white@example.com",
+      "emp_password": "complex123",
+      "role": "user"
+    },
+    {
+      "id": 7,
+      "emp_id": 1007,
+      "emp_name": "Diana Black",
+      "emp_email": "diana.black@example.com",
+      "emp_password": "verysecure",
+      "role": "admin"
+    },
+    {
+      "id": 8,
+      "emp_id": 1008,
+      "emp_name": "Ethan Gray",
+      "emp_email": "ethan.gray@example.com",
+      "emp_password": "password456",
+      "role": "user"
+    },
+    {
+      "id": 9,
+      "emp_id": 1009,
+      "emp_name": "Fiona Blue",
+      "emp_email": "fiona.blue@example.com",
+      "emp_password": "secureme",
+      "role": "user"
+    },
+    {
+      "id": 10,
+      "emp_id": 1010,
+      "emp_name": "George Red",
+      "emp_email": "george.red@example.com",
+      "emp_password": "mypassword",
+      "role": "admin"
+    }
+  ]

@@ -171,4 +171,8 @@ cython_debug/
 .ruff_cache/
 
 # PyPI configuration file
+<<<<<<< HEAD
 .pypirc
+=======
+.pypirc
+>>>>>>> 96b67be0013b4f12449ba668e4271c88ef589261
