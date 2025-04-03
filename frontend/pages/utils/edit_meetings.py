@@ -38,7 +38,8 @@ def edit_meetings():
                 "description": meeting['description'],
                 "date": meeting_date,
                 "time": meeting_time,
-                "attendees": meeting['attendees']
+                "attendees": meeting['attendees'],
+                "link": meeting.get('meeting_url', '')  # Initialize with current meeting link
             }
        
         with st.form(key=f"edit_form_{selected_idx}"):
@@ -66,6 +67,17 @@ def edit_meetings():
                 format_func=lambda x: employee_options[x],
                 default=draft['attendees']
             )
+            
+            # Meeting Link field - Shows current link by default
+            #current_link = meeting.get('meeting_url', 'No link currently set')
+            # st.markdown(f"**Current Meeting Link:** `{current_link}`")
+            
+            new_link = st.text_input(
+                "Meeting Link*",
+                value=draft.get('link', ''),
+                placeholder='Enter Teams Meeting link',
+                help="Paste the new meeting link here to update"
+            )
            
             # Action buttons
             col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
@@ -89,7 +101,8 @@ def edit_meetings():
                     "description": new_desc,
                     "date": new_date,
                     "time": new_time,
-                    "attendees": new_attendees
+                    "attendees": new_attendees,
+                    "link": new_link
                 }
                 st.session_state.show_draft_saved = True
                 st.rerun()
@@ -108,7 +121,8 @@ def edit_meetings():
                         "datetime": meeting_datetime,
                         "date": meeting_datetime.date(),
                         "time": meeting_datetime.time(),
-                        "attendees": new_attendees
+                        "attendees": new_attendees,
+                        "link": new_link
                     }
                     # Clear the draft
                     if f'edit_draft_{selected_idx}' in st.session_state:

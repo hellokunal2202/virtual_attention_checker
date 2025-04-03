@@ -24,17 +24,27 @@ def display_meeting_details(meeting, meeting_type):
             st.markdown(f"**Attendees**  \n{len(meeting['attendees'])} people")
             
             # Action buttons
-            if meeting_type == "past" and 'report_url' in meeting:
-                st.markdown(
-                    f"""
-                    <a href="{meeting['report_url']}" target="_blank">
-                        <button class="action-button" style="background-color: #4CAF50;">
-                            📄 View Report
+            if meeting_type == "past":
+                if 'report_url' in meeting:
+                    st.markdown(
+                        f"""
+                        <a href="{meeting['report_url']}" target="_blank">
+                            <button class="action-button" style="background-color: #4CAF50;">
+                                📄 View Report
+                            </button>
+                        </a>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown(
+                        """
+                        <button class="action-button" style="background-color: #cccccc; color: #666666;" disabled>
+                            📄 No Report Available
                         </button>
-                    </a>
-                    """,
-                    unsafe_allow_html=True
-                )
+                        """,
+                        unsafe_allow_html=True
+                    )
             elif meeting_type == "upcoming" and 'meeting_url' in meeting:
                 st.markdown(
                     f"""
@@ -101,6 +111,10 @@ def view_meetings():
         .action-button:hover {
             opacity: 0.8;
         }
+        .action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -123,15 +137,17 @@ def view_meetings():
             meeting_time = meeting.get('time', time(0, 0))
             meeting_datetime = datetime.combine(meeting_date, meeting_time)
         
+        # Calculate meeting window (30 mins before to 1 hour after)
         start_window = meeting_datetime - timedelta(minutes=30)
         end_window = meeting_datetime + timedelta(hours=1)
         
-        if now > end_window:
-            past.append(meeting)
+        # Categorize meetings based on current time
+        if now < start_window:
+            upcoming.append(meeting)
         elif start_window <= now <= end_window:
             live.append(meeting)
         else:
-            upcoming.append(meeting)
+            past.append(meeting)
     
     # Sort meetings using datetime objects
     def get_meeting_datetime(m):

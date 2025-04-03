@@ -1,8 +1,8 @@
 import streamlit as st
 from pages.utils.demo_data import initialize_demo_data
-from pages.utils.View_Meetings import view_meetings
-from pages.utils.Create_Meeting import create_meeting
-from pages.utils.Edit_Meetings import edit_meetings
+from pages.utils.view_meetings import view_meetings
+from pages.utils.create_meeting import create_meeting
+from pages.utils.edit_meetings import edit_meetings
 from pages.utils.ui_components import persistent_logout
 
 def main():
