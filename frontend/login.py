@@ -1,9 +1,22 @@
 import streamlit as st
 import hashlib
-from pathlib import Path
-import sys
 
-# Page Configuration (must be first)
+# following code helps to remove the default press enter to submit text
+
+# # Add this CSS to hide the helper text
+# st.markdown("""
+# <style>
+#     .stTextInput [data-testid="InputInstructions"] {
+#         display: none;
+#     }
+# </style>
+# """, unsafe_allow_html=True)
+
+# # Your text inputs will now show no helper text
+# username = st.text_input("Username", label_visibility="visible")
+# password = st.text_input("Password", type="password", label_visibility="visible")
+
+# Page Configuration
 st.set_page_config(
     page_title="Virtual Attention Checker - Login",
     page_icon="🔒",
@@ -12,22 +25,19 @@ st.set_page_config(
 )
 
 
-# Add admin directory to Python path for imports
-admin_path = str(Path(__file__).parent / "admin")
-sys.path.append(admin_path)
-
-# Custom CSS (your complete original CSS)
+# Custom CSS with improvements
 st.markdown("""
 <style>
     /* Modified Main Container */
     .main {
         max-width: 280px;
-        min-height: 10px;
+        min-height: 10px;  /* Increased form height */
         padding: 1.5rem;
-        margin: 20px auto;
+        margin: 20px auto;  /* Centered with vertical spacing */
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         background-color: var(--background-color);
+        /* Add these to control internal spacing */
         display: flex;
         flex-direction: column;
     }
@@ -39,7 +49,6 @@ st.markdown("""
         flex-direction: column;
         justify-content: space-between;
     }
-    
     /* Title styling */
     .title {
         text-align: center;
@@ -49,7 +58,7 @@ st.markdown("""
         font-weight: 700;
     }
     
-    /* Input fields container */
+    /* Input fields container - tighter and centered */
     .stTextInput {
         display: flex;
         justify-content: center;
@@ -64,48 +73,64 @@ st.markdown("""
     .stTextInput>div>div {
         width: 100% !important;
         margin: 0 auto 0.5rem auto !important;
-        position: relative !important;
     }
     
-    /* Input fields styling */
+    /* Input fields - prevent text overflow and scrolling */
     .stTextInput>div>div>input {
         border-radius: 6px;
         border: 1px solid var(--secondary-background-color);
-        padding: 8px 35px 8px 10px !important;
-        width: 100% !important;
+        padding: 8px 30px 8px 10px !important;
+        width: 120% !important;
         text-align: left;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        box-sizing: border-box !important;
     }
     
-    /* Password toggle button - improved positioning */
+    /* Password toggle button - fixed positioning */
     .stTextInput>div>div>button {
         position: absolute !important;
-        right: 8px !important;
+        right: 10px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
+        z-index: 10;
         background: none !important;
         border: none !important;
         padding: 0 !important;
         margin: 0 !important;
-        min-height: 24px !important;
-        min-width: 24px !important;
         height: 24px !important;
         width: 24px !important;
-        cursor: pointer;
-        color: var(--primary-text-color) !important;
     }
     
-    /* Password field specific styles */
+    /* Ensure password toggle button is on top of input */
+    .stTextInput>div>div {
+        position: relative !important;
+    }
+    
+    /* Password field */
     .stTextInput>div>div>input[type="password"] {
         font-family: monospace;
+        padding-right: 5px !important;
         letter-spacing: 1px;
-        padding-right: 35px !important;
     }
     
-    /* Button container */
+    /* Checkbox container - centered */
+    .stCheckbox {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin: 0.5rem 0 1rem 0 !important;
+    }
+    
+    .stCheckbox>label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 220px;
+    }
+    
+    /* Button container - centered */
     .stButton {
         display: flex;
         justify-content: center;
@@ -113,7 +138,7 @@ st.markdown("""
         margin: 1rem 0 0 0 !important;
     }
     
-    /* Button styling */
+    /* Button styling with hover effect */
     .stButton>button {
         width: 60%;
         border-radius: 6px;
@@ -148,7 +173,7 @@ st.markdown("""
         padding: 1rem !important;
     }
     
-    /* Light mode variables */
+    /* Dark mode variables */
     [data-theme="light"] {
         --background-color: white;
         --primary-text-color: #2c3e50;
@@ -159,7 +184,6 @@ st.markdown("""
         --main-background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
     
-    /* Dark mode variables */
     [data-theme="dark"] {
         --background-color: #1e2227;
         --primary-text-color: #f0f2f6;
@@ -169,32 +193,33 @@ st.markdown("""
         --button-text-color: #f0f2f6;
         --main-background: linear-gradient(135deg, #0f0c29 0%, #302b63 100%);
     }
-    
-    /* Hide input instructions */
     .stTextInput [data-testid="InputInstructions"] {
         display: none;
     }
-    
-    /* Label styling */
+      /* Adjust label and help icon positioning */
     .stTextInput label {
         margin-bottom: 8px !important;
         display: flex !important;
         align-items: center !important;
         gap: 4px !important;
         margin-right: 12px !important;
+        
     }
 
-    /* Input field spacing */
+    /* Add margin between label+help and input field */
     .stTextInput>div>div {
         margin-top: 12px !important;
     }
     
-    /* Fix for button hover state */
-    .stTextInput>div>div>button:hover {
-        background: transparent !important;
-    }
+
+    
 </style>
+
 """, unsafe_allow_html=True)
+
+
+# Rest of the code remains the same as in the previous version
+# (User database, authentication function, and login page content)
 
 # Mock user database
 USER_DATABASE = {
@@ -212,51 +237,51 @@ USER_DATABASE = {
 
 def authenticate(username, password):
     """Authenticate user against the database"""
-    username = username.lower().strip()
     if username in USER_DATABASE:
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         if USER_DATABASE[username]["password_hash"] == hashed_password:
             return True, USER_DATABASE[username]
     return False, None
 
-# If already authenticated, redirect immediately
-if st.session_state.get("authenticated"):
-    role = st.session_state.get("user_info", {}).get("role")
-    if role == "admin":
-        from admin.Home import main as admin_main
-        admin_main()
-        st.stop()
-    # elif role == "user":
-    #     from user.Dashboard import main as user_main
-    #     user_main()
-    #     st.stop()
-
 # Login Page Content
 with st.container():
     st.markdown('<div class="main">', unsafe_allow_html=True)
     
+    # App Title
     st.markdown('<h1 class="title">Virtual Attention Checker</h1>', unsafe_allow_html=True)
     
+    # Login Form
     with st.form("login_form"):
+        # Username Field
+        
         username = st.text_input(
-            "Username\u00A0\u00A0\u00A0",
+            "Username\u00A0\u00A0\u00A0",  # Using non-breaking spaces
+            #placeholder="Enter your username",
             help="Your registered username",
             key="username_input",
             label_visibility="visible"
         )
         
+        # Password Field
         password = st.text_input(
             "Password\u00A0\u00A0\u00A0",
             type="password",
+            #placeholder="Enter your password",
             help="Your account password",
             key="password_input",
             label_visibility="visible"
         )
         
-        col1, col2, col3 = st.columns([4, 2, 3])
-        with col2:
-            login_button = st.form_submit_button("Login", type="primary", use_container_width=True)
         
+        # # Remember Me checkbox (centered)
+        # cols = st.columns([3, 4, 3])  # Create columns for centering
+        # with cols[1]:
+        #     remember_me = st.checkbox("Remember me", value=False)
+        
+        # Login Button (centered with hover tooltip)
+        cols = st.columns([7, 4, 5])  # Create columns for centering
+        with cols[1]:
+            login_button = st.form_submit_button("Login", type="primary")
         if login_button:
             if not username and not password:
                 st.error("Please enter both username and password")
@@ -270,13 +295,13 @@ with st.container():
                     st.session_state["authenticated"] = True
                     st.session_state["user_info"] = user_info
                     st.session_state["username"] = username
+                    # st.session_state["remember_me"] = remember_me
                     st.success("Login successful! Redirecting...")
-                    
-                    # Force immediate redirect
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
-                    st.error("Invalid credentials")
-
+                    st.error("Username and password do not match")
+    
+    # Footer
     st.markdown("""
     <div style="text-align: center; margin-top: 1.2rem; color: var(--secondary-text-color); font-size: 0.8rem;">
         © 2023 Virtual Attention Checker | v1.0.0
@@ -285,12 +310,8 @@ with st.container():
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Block back navigation
-st.markdown("""
-<script>
-    history.pushState(null, null, location.href);
-    window.onpopstate = function(event) {
-        history.go(1);
-    };
-</script>
-""", unsafe_allow_html=True)
+# Redirect if already logged in
+if st.session_state.get("authenticated"):
+    st.switch_page("admin\Home")
+
+ 
