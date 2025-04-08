@@ -3,18 +3,19 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import sys
 import pandas as pd
- 
+import importlib
+
 # Add admin directory to Python path
 admin_path = str(Path(__file__).parent)
 sys.path.append(admin_path)
- 
+
 # Import from pages.utils
 from pages.utils.demo_data import initialize_demo_data
 from pages.utils.ui_components import persistent_logout
- 
+
 # Initialize data
 initialize_demo_data()
- 
+
 def initialize_session_data():
     """Initialize all session state data"""
     initialize_demo_data()
@@ -25,8 +26,30 @@ def initialize_session_data():
             {"timestamp": datetime.now() - timedelta(hours=1), "action": "Meeting scheduled", "details": "Quarterly Review scheduled for 2023-11-15"},
             {"timestamp": datetime.now() - timedelta(minutes=45), "action": "Report generated", "details": "Monthly analytics report"},
         ]
- 
-# Dashboard content (your existing functions)
+
+def get_admin_pages():
+    """Dynamically discover all admin pages without importing them immediately"""
+    pages_dir = Path(__file__).parent / "pages"
+    page_files = sorted([f for f in pages_dir.glob("[0-9]_*.py")])
+    
+    pages = []
+    for page_file in page_files:
+        pages.append({
+            "name": page_file.stem.replace("_", " ").title(),
+            "path": str(page_file),
+            "module_name": f"pages.{page_file.stem}",
+            "icon": "📄"  # Default icon
+        })
+    return pages
+
+def load_page_module(module_name):
+    """Safely import a page module"""
+    try:
+        return importlib.import_module(module_name)
+    except ImportError as e:
+        st.error(f"Failed to load page module: {e}")
+        return None
+
 def render_header():
     current_dir = Path(__file__).parent
     ADMIN_PROFILE = {
@@ -76,7 +99,7 @@ def render_stats_cards():
             st.metric("Past Meetings",
                      len([m for m in st.session_state.meetings_db
                          if m['date'] < datetime.now() - timedelta(hours=1)]))
- 
+
 def render_recent_activity():
     """Render the recent activity section"""
     st.subheader("🔄 Recent Activity")
@@ -129,7 +152,7 @@ def render_recent_activity():
                     with col2:
                         st.markdown(f"**{log['action']}**")
                         st.caption(log['details'])
- 
+
 def render_system_management():
     """Render the system management section"""
     st.subheader("⚙️ System Management")
@@ -150,19 +173,17 @@ def render_system_management():
         with cols[2]:
             if st.button("🛠️ System Settings", use_container_width=True):
                 st.toast("Redirecting to settings...", icon="⚙️")
- 
-def add_log_entry(action, details):
-    """Helper function to add log entries"""
-    st.session_state.system_logs.insert(0, {
-        "timestamp": datetime.now(),
-        "action": action,
-        "details": details
-    })
- 
+
 def main():
     """Main function to run the admin dashboard"""
-    st.page_icon="🛡️"
- 
+    # Set page config must be first
+    st.set_page_config(
+        page_title="Admin Dashboard",
+        page_icon="🛡️",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    
     # Custom CSS for styling
     st.markdown("""
     <style>
@@ -195,19 +216,82 @@ def main():
         .report-btn {
             margin-top: 1rem;
         }
+        [data-testid="stSidebarNav"] {
+            max-height: 100vh !important;
+            overflow-y: auto !important;
+        }
+        .sidebar-collapse-control {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            z-index: 1;
+        }
     </style>
     """, unsafe_allow_html=True)
- 
-    # Initialize data
-    initialize_session_data()
-   
-    # Render all components
-    st.title("Admin Dashboard")
-    render_header()
-    render_stats_cards()
-    render_recent_activity()
-    render_system_management()
- 
+    
+    # Initialize sidebar state
+    if 'sidebar_collapsed' not in st.session_state:
+        st.session_state.sidebar_collapsed = False
+    
+    # Sidebar navigation
+    with st.sidebar:
+        cols = st.columns([4, 1])
+        with cols[0]:
+            st.subheader("Admin Navigation")
+        with cols[1]:
+            if st.button("≡", key="sidebar_toggle"):
+                st.session_state.sidebar_collapsed = not st.session_state.sidebar_collapsed
+        
+        if not st.session_state.sidebar_collapsed:
+            # Get all available pages
+            admin_pages = get_admin_pages()
+            
+            # Add navigation
+            st.divider()
+            if st.button("🏠 Dashboard", use_container_width=True, 
+                        type="primary" if not st.session_state.get('current_page') else "secondary"):
+                st.session_state.current_page = None
+                st.rerun()
+            
+            for page in admin_pages:
+                if st.button(
+                    f"{page['icon']} {page['name']}", 
+                    use_container_width=True,
+                    key=f"nav_{page['path']}",
+                    type="primary" if st.session_state.get('current_page') == page['path'] else "secondary"
+                ):
+                    st.session_state.current_page = page['path']
+                    st.rerun()
+            
+            st.divider()
+            persistent_logout(position="sidebar", key_suffix="admin_dashboard")  # Your existing logout button
+    
+    # Page rendering logic
+    if st.session_state.get('current_page'):
+        # Dynamically render the selected page
+        selected_page = next((p for p in get_admin_pages() if p['path'] == st.session_state.current_page), None)
+        if selected_page:
+            module = load_page_module(selected_page['module_name'])
+            if module:
+                try:
+                    if hasattr(module, 'main'):
+                        module.main()
+                    else:
+                        st.error("Page module has no main() function")
+                except Exception as e:
+                    st.error(f"Error executing page: {e}")
+        else:
+            st.error("Page not found")
+            st.session_state.current_page = None
+            st.rerun()
+    else:
+        # Your existing dashboard content
+        initialize_session_data()
+        st.title("Admin Dashboard")
+        render_header()
+        render_stats_cards()
+        render_recent_activity()
+        render_system_management()
+
 if __name__ == "__main__":
     main()
- 

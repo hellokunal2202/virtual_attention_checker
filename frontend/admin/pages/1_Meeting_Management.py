@@ -6,9 +6,8 @@ from pages.utils.edit_meetings import edit_meetings
 from pages.utils.ui_components import persistent_logout
 
 def main():
-    st.set_page_config(page_title="Meeting Management", layout="wide")
     initialize_demo_data()
-    persistent_logout()
+    persistent_logout(position="sidebar", key_suffix="meeting_mgmt")
     
     st.title("Meeting Management")
     tab1, tab2, tab3 = st.tabs(["Create Meeting", "View Meetings", "Edit Meetings"])

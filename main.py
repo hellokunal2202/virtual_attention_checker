@@ -2,6 +2,9 @@ import streamlit as st
 import json
 from pathlib import Path
 from frontend.user import user_dash
+from frontend.admin import Home
+import importlib
+from pathlib import Path
 
 # Load employee data
 def load_employee_data():
@@ -76,7 +79,7 @@ def main():
         login_page()
     else:
         if st.session_state.get("page") == "admin_dashboard":
-            admin_dashboard()
+            Home.main()
         else:
             user_dash.main()
 
