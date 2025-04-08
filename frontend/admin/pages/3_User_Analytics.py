@@ -62,8 +62,6 @@ def calculate_user_metrics(user_id, meeting_history=None):
     return meetings_attended, avg_engagement, trend, meeting_history
 
 def main():
-    """User Analytics main page with enhanced features from new code"""
-    st.set_page_config(page_title="User Analytics", layout="wide")
     persistent_logout()
     if 'demo_employees' not in st.session_state:
         st.session_state.demo_employees = DEMO_EMPLOYEES

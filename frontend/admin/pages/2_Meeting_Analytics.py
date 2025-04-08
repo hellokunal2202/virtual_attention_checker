@@ -7,7 +7,6 @@ from pages.utils.demo_data import DEMO_EMPLOYEES,initialize_demo_data
 from pages.utils.ui_components import persistent_logout
 
 def main():
-    st.set_page_config(page_title="Meeting Analytics", layout="wide")
     initialize_demo_data()
     persistent_logout()
     
