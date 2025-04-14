@@ -1,28 +1,35 @@
-import streamlit as st
 import os
-import shutil
-from pathlib import Path
 import sys
+import shutil
+import traceback
 import importlib
+from PIL import Image
+import streamlit as st
+from pathlib import Path
+from .utils.get_data import initialize_data
 
 # Add user directory to Python path
 user_path = str(Path(__file__).parent)
 sys.path.append(user_path)
 
+
 def get_user_pages():
     """Dynamically discover all user pages"""
     pages_dir = Path(__file__).parent / "pages"
     page_files = sorted([f for f in pages_dir.glob("[0-9]_*.py")])
-    
+
     pages = []
     for page_file in page_files:
-        pages.append({
-            "name": page_file.stem.replace("_", " ").title(),
-            "path": str(page_file),
-            "module_name": f"pages.{page_file.stem}",
-            "icon": "📄"  # Default icon
-        })
+        pages.append(
+            {
+                "name": page_file.stem.replace("_", " ").title(),
+                "path": str(page_file),
+                "module_name": f"pages.{page_file.stem}",
+                "icon": "📄",  # Default icon
+            }
+        )
     return pages
+
 
 def load_page_module(module_name):
     """Safely import a page module"""
@@ -32,18 +39,22 @@ def load_page_module(module_name):
         st.error(f"Failed to load page module: {e}")
         return None
 
-def main():
+
+def main(user_id: int):
     """Main function to run the user dashboard"""
+    initialize_data(user_id)
+
     # Page Configuration
     st.set_page_config(
-        page_title="User Dashboard", 
+        page_title="User Dashboard",
         page_icon="👤",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="expanded",
     )
-    
+
     # Custom CSS for styling
-    st.markdown("""
+    st.markdown(
+        """
     <style>
         .header {
             display: flex;
@@ -59,55 +70,68 @@ def main():
             overflow-y: auto !important;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Sidebar Navigation
     with st.sidebar:
         st.subheader("User Navigation")
-        
+
         # Get all available pages
         user_pages = get_user_pages()
-        
+
         # Add navigation
         st.divider()
-        if st.button("🏠 Dashboard", use_container_width=True, 
-                    type="primary" if not st.session_state.get('current_page') else "secondary"):
+        if st.button(
+            "🏠 Dashboard",
+            use_container_width=True,
+            type="primary" if not st.session_state.get("current_page") else "secondary",
+        ):
             st.session_state.current_page = None
             st.rerun()
-        
+
         for page in user_pages:
             if st.button(
-                f"{page['icon']} {page['name']}", 
+                f"{page['icon']} {page['name']}",
                 use_container_width=True,
                 key=f"nav_{page['path']}",
-                type="primary" if st.session_state.get('current_page') == page['path'] else "secondary"
+                type=(
+                    "primary"
+                    if st.session_state.get("current_page") == page["path"]
+                    else "secondary"
+                ),
             ):
-                st.session_state.current_page = page['path']
+                st.session_state.current_page = page["path"]
                 st.rerun()
-        
+
         st.divider()
         if st.button("🚪 Logout", key="logout_btn_sidebar", use_container_width=True):
             st.session_state.clear()
             st.rerun()
 
     # Page rendering logic
-    if st.session_state.get('current_page'):
+    if st.session_state.get("current_page"):
         # Dynamically render the selected page
-        selected_page = next((p for p in get_user_pages() if p['path'] == st.session_state.current_page), None)
+        selected_page = next(
+            (p for p in get_user_pages() if p["path"] == st.session_state.current_page),
+            None,
+        )
         if selected_page:
-            module = load_page_module(selected_page['module_name'])
+            module = load_page_module(selected_page["module_name"])
             if module:
                 try:
-                    if hasattr(module, 'main'):
+                    if hasattr(module, "main"):
                         module.main()
                     else:
                         st.error("Page module has no main() function")
                 except Exception as e:
+                    print(traceback.print_exception(e))
                     st.error(f"Error executing page: {e}")
     else:
         # Original dashboard content
         st.title("User Dashboard")
-        
+
         # Define the folder to store images
         UPLOAD_FOLDER = "uploaded_images"
         if not os.path.exists(UPLOAD_FOLDER):
@@ -115,9 +139,9 @@ def main():
 
         # Simulated User Session
         if "user_name" not in st.session_state:
-            st.session_state["user_name"] = "Sam Malviya"
+            st.session_state["user_name"] = st.session_state["user"]["username"]
             st.session_state["role"] = "Associate Trainee"
-            st.session_state["email"] = "sam.malviya@yash.com"
+            st.session_state["email"] = st.session_state["user"]["email"]
             st.session_state["last_login"] = "Updating..."
             st.session_state["profile_completed"] = False
             st.session_state["edit_mode"] = False
@@ -125,18 +149,28 @@ def main():
         # Header Section
         col1, col2 = st.columns([1.75, 4])  # Removed the third column for logout
         with col1:
-            st.image(r"frontend\user\view.png")
+            if "user" in st.session_state and "images" in st.session_state["user"]:
+                image_path = st.session_state["user"]["images"]["image_url1"]
+            else:
+                image_path = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkiIFjCOZ-mMeqxd2ryrneiHedE8G9S0AboA&s"
+
+            st.image(image_path)
 
         with col2:
             st.subheader(st.session_state["user_name"])
-            st.markdown(f"""
+            st.markdown(
+                f"""
             - **Role:** {st.session_state["role"]}
             - **Email:** {st.session_state["email"]}
-            - **Last Login:** {st.session_state["last_login"]}
-            """)
+            """
+            )
 
         # Get saved images from folder
-        saved_images = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith(".png")]
+        if "user" in st.session_state and "images" in st.session_state["user"]:
+            saved_images = list(st.session_state["user"]["images"].values())
+            saved_images = saved_images[:5]
+        else:
+            saved_images = []
 
         # Determine if profile is completed
         st.session_state["profile_completed"] = len(saved_images) == 5
@@ -154,7 +188,11 @@ def main():
 
         # Show file uploader only if the profile is not completed
         if not st.session_state["profile_completed"]:
-            uploaded_files = st.file_uploader("Upload exactly 5 PNG images", type=["png","jpg","jpeg"], accept_multiple_files=True)
+            uploaded_files = st.file_uploader(
+                "Upload exactly 5 PNG images",
+                type=["png", "jpg", "jpeg"],
+                accept_multiple_files=True,
+            )
 
             if uploaded_files:
                 if len(uploaded_files) == 5:
@@ -176,10 +214,6 @@ def main():
             st.subheader("Uploaded Images Preview:")
             cols = st.columns(5)
 
-            for i, image_name in enumerate(sorted(saved_images)):  
-                image_path = os.path.join(UPLOAD_FOLDER, image_name)
-                with cols[i]:
-                    st.image(image_path, caption=f"Image {i+1}", use_container_width=True)
-
-if __name__ == "__main__":
-    main()
+            for i, image_path in enumerate(saved_images):
+                with cols[i % 5]:
+                    st.image(image_path, use_container_width=True)
